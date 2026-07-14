@@ -25,3 +25,5 @@ Tables/
 *.csv
 *.db
 *.sqlite
+pipeline.log
+
