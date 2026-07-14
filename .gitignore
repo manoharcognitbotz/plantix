@@ -1,0 +1,27 @@
+# Environments
+.venv313/
+.venv/
+venv/
+ENV/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Sensitive files
+.env
+
+# Temporary and local data/downloads/outputs
+temp_downloads/
+Download/
+Output/
+Comparision data/
+Tables/
+*.pdf
+*.xlsx
+*.csv
+*.db
+*.sqlite
