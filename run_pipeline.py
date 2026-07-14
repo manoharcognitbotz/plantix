@@ -12,25 +12,33 @@ PYTHON_EXE = os.path.join(PROJECT_DIR, ".venv313", "Scripts", "python.exe")
 
 def run_script(script_name, args=[]):
     script_path = os.path.join(PROJECT_DIR, script_name)
-    print(f"\n=======================================================")
-    print(f"[*] RUNNING STAGE: {script_name} {' '.join(args)}")
-    print(f"=======================================================\n")
-    try:
-        # Run using the venv Python with the project directory as cwd
-        subprocess.run(
-            [PYTHON_EXE, script_path] + args,
-            check=True,
-            cwd=PROJECT_DIR
-        )
-        print(f"\n[+] STAGE COMPLETED: {script_name} successfully.")
-        return True
-    except subprocess.CalledProcessError as e:
-        print(f"\n[-] STAGE FAILED: {script_name} failed with exit code {e.returncode}.")
-        return False
-    except FileNotFoundError:
-        print(f"\n[-] STAGE FAILED: Python executable not found at {PYTHON_EXE}")
-        print(f"    Please verify the virtual environment path.")
-        return False
+    log_path = os.path.join(PROJECT_DIR, "pipeline.log")
+    
+    # We append to the log file so the outputs of stages are preserved
+    with open(log_path, "a", encoding="utf-8") as log_file:
+        log_file.write(f"\n=======================================================\n")
+        log_file.write(f"[*] RUNNING STAGE: {script_name} {' '.join(args)}\n")
+        log_file.write(f"=======================================================\n")
+        log_file.flush()
+        
+        try:
+            # Run using the venv Python with the project directory as cwd, redirecting output to the log file
+            subprocess.run(
+                [PYTHON_EXE, script_path] + args,
+                check=True,
+                cwd=PROJECT_DIR,
+                stdout=log_file,
+                stderr=log_file
+            )
+            log_file.write(f"\n[+] STAGE COMPLETED: {script_name} successfully.\n")
+            return True
+        except subprocess.CalledProcessError as e:
+            log_file.write(f"\n[-] STAGE FAILED: {script_name} failed with exit code {e.returncode}.\n")
+            return False
+        except FileNotFoundError:
+            log_file.write(f"\n[-] STAGE FAILED: Python executable not found at {PYTHON_EXE}\n")
+            return False
+
 
 def clean_leftover_word_processes():
     print("[*] Cleaning up any leftover Word background processes...")
@@ -44,12 +52,18 @@ def main():
     # Pass any arguments (like --reset) to the sub-scripts
     extra_args = sys.argv[1:]
     
+    # Redirect run_pipeline.py's own stdout/stderr to pipeline.log to prevent UiPath/RPA host process hangs
+    log_path = os.path.join(PROJECT_DIR, "pipeline.log")
+    sys.stdout = open(log_path, "a", encoding="utf-8", buffering=1)
+    sys.stderr = sys.stdout
+    
     try:
         # Clean up background processes first
         clean_leftover_word_processes()
         
         # 1. Run create_tables.py to ensure database and all tables exist
         if not run_script("create_tables.py"):
+
             print("[-] Pipeline aborted at Stage 1 (create_tables.py).")
             sys.exit(1)
         
