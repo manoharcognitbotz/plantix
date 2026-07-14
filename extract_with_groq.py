@@ -149,8 +149,20 @@ def extract_doc_text(doc_path):
                 word.Quit()
         except Exception:
             pass
+        
+        # Release COM references from python memory
+        doc = None
+        word = None
         pythoncom.CoUninitialize()
+        
+        # Force terminate winword process in case it is still active/hanging
+        import subprocess
+        try:
+            subprocess.run("taskkill /f /im winword.exe", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
     return text
+
 
 def extract_eml_text(eml_path):
     """Extract headers, plain text, and HTML body text from an EML file."""

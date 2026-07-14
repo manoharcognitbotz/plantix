@@ -277,7 +277,19 @@ def export_html_to_pdf(html_path, pdf_path):
                 word.Quit()
         except Exception:
             pass
+        
+        # Release COM references from python memory
+        doc = None
+        word = None
         pythoncom.CoUninitialize()
+        
+        # Force terminate winword process in case it is still active/hanging
+        import subprocess
+        try:
+            subprocess.run("taskkill /f /im winword.exe", shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        except Exception:
+            pass
+
 
 # Absolute path to the project directory for RPA compatibility
 try:
