@@ -306,7 +306,7 @@ def parse_image_with_groq(image_path, api_key):
                         ]
                     }
                 ],
-                model="llama-3.2-90b-vision-preview",
+                model="llama-3.2-11b-vision-preview",
                 response_format={"type": "json_object"}
             )
             result = json.loads(response.choices[0].message.content)

@@ -1,0 +1,222 @@
+[*] Cleaning up any leftover Word background processes...
+
+=======================================================
+[*] RUNNING STAGE: create_tables.py 
+=======================================================
+[*] Connecting to PostgreSQL server ep-falling-smoke-ad984y5q.c-2.us-east-1.aws.neon.tech:5432 as 'neondb_owner'...
+[*] Database 'neondb' already exists.
+
+[*] Connecting to database 'neondb'...
+[*] Creating table 'comparison_data'...
+[*] Creating table 'processed_files'...
+[*] Creating table 'raw_quotations'...
+[*] Creating table 'supplier_slots'...
+[*] Creating table 'supplier_items'...
+[*] Creating table 'supplier_terms'...
+
+[+] Verifying tables...
+  [OK] comparison_data (0 rows)
+  [OK] processed_files (0 rows)
+  [OK] raw_quotations (0 rows)
+  [OK] supplier_items (0 rows)
+  [OK] supplier_slots (3 rows)
+  [OK] supplier_terms (9 rows)
+
+[+] All tables created successfully. Database is ready.
+
+[+] STAGE COMPLETED: create_tables.py successfully.
+
+=======================================================
+[*] RUNNING STAGE: store_comparison_data.py 
+=======================================================
+[*] Connecting to database server ep-falling-smoke-ad984y5q.c-2.us-east-1.aws.neon.tech:5432 as user 'neondb_owner'...
+[*] Database 'neondb' already exists.
+[*] Found 1 Excel file(s) to import.
+[*] Connecting to database 'neondb'...
+[*] Checking table 'comparison_data'...
+[*] Clearing table 'comparison_data' for clean import...
+[*] Reading data from 'InputFile.xlsx'...
+[+] Successfully imported 13 rows from 'InputFile.xlsx'.
+[+] Import complete. Total rows inserted: 13
+
+--- Verification: Contents of table 'comparison_data' (13 records) ---
+ID: 623 | Item: 38mm Cable Gland Double Compressor Stainless Steel Make: HMI | UOM: Nos | Qty: 30
+ID: 624 | Item: 150 Sqmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 75
+ID: 625 | Item: 300 sqmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 150
+ID: 626 | Item: 63mm Cable Gland Double Compressor Stainless Steel Make: HMI | UOM: Nos | Qty: 50
+ID: 627 | Item: 120 SQmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 100
+ID: 628 | Item: 240 SQmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 100
+ID: 629 | Item: 35 SQmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 50
+ID: 630 | Item: 70 SQmm Copper Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 400
+ID: 631 | Item: 50 SQmm Aluminium Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 150
+ID: 632 | Item: 35mm Cable Gland Double Compressor Stainless Steel Make: HMI | UOM: Nos | Qty: 50
+ID: 633 | Item: 35 SQmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 80
+ID: 634 | Item: 25 SQmm Aluminium Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 75
+ID: 635 | Item: 70 SQmm Aluminium Lug Flat Type Make: Dowels | UOM: Nos | Qty: 200
+
+[+] STAGE COMPLETED: store_comparison_data.py successfully.
+
+=======================================================
+[*] RUNNING STAGE: extract_with_groq.py 
+=======================================================
+[*] Connecting to database...
+[*] Persisting existing data. Scanning for new files...
+[*] Found 3 file(s) in Download directory.
+[*] Processing new file: 26-271151 (1).pdf
+[PDF] Extracting text from: 26-271151 (1).pdf
+[*] Calling Groq LLM to parse text: 26-271151 (1).pdf...
+[*] Attempting parse with Groq model: llama-3.3-70b-versatile (Attempt 1/3)...
+[+] Groq parsed: 'Hari Hara Enterprises' with 13 items.
+[+] File '26-271151 (1).pdf' successfully imported to database in slot 1.
+[*] Processing new file: Re_  (1).eml
+[EML] Extracting text from: Re_  (1).eml
+[*] Calling Groq LLM to parse text: Re_  (1).eml...
+[*] Attempting parse with Groq model: llama-3.3-70b-versatile (Attempt 1/3)...
+[+] Groq parsed: 'cognitbotz' with 13 items.
+[+] File 'Re_  (1).eml' successfully imported to database in slot 2.
+[*] Processing new file: ffff.eml
+[EML] Extracting text from: ffff.eml
+[*] Calling Groq LLM to parse text: ffff.eml...
+[*] Attempting parse with Groq model: llama-3.3-70b-versatile (Attempt 1/3)...
+[+] Groq parsed: 'XYZ' with 13 items.
+[+] File 'ffff.eml' successfully imported to database in slot 3.
+[*] Import pass finished. 3 new file(s) imported.
+[*] Current unique suppliers in database: 3 (Hari Hara Enterprises, cognitbotz, XYZ)
+[*] Reached target: >= 3 companies in database. PDF compilation is deferred to the next stage (generate_pdf_from_db.py).
+
+[+] STAGE COMPLETED: extract_with_groq.py successfully.
+
+=======================================================
+[*] RUNNING STAGE: generate_pdf_from_db.py 
+=======================================================
+[*] Connecting to database...
+[*] Found 3 active supplier(s) in the database.
+[*] Fetching side-by-side data from database...
+[HTML] Generated comparison sheet: C:\UiPathProjects\BlankProcess\SE\Output\temp_compare.html
+[PDF] Compiling HTML into PDF report...
+[PDF] Generated PDF successfully: C:\UiPathProjects\BlankProcess\SE\Output\Output.pdf
+[HTML] Cleaned up temporary comparison file.
+[+] Synced copy of PDF report to: C:\Extraction Quotation\Output\Output.pdf
+
+[+] SUCCESS: Standalone comparison statement generated successfully from the database.
+[*] Clearing database data (transient tables and cache) and resetting slots/terms...
+[+] Database tables successfully cleared and reset.
+
+[+] STAGE COMPLETED: generate_pdf_from_db.py successfully.
+
+=======================================================
+[+] SUCCESS: Complete Comparison Pipeline executed successfully.
+=======================================================
+
+[*] Cleaning up any leftover Word background processes...
+[*] Cleaning up any leftover Word background processes...
+
+=======================================================
+[*] RUNNING STAGE: create_tables.py 
+=======================================================
+[*] Connecting to PostgreSQL server ep-falling-smoke-ad984y5q.c-2.us-east-1.aws.neon.tech:5432 as 'neondb_owner'...
+[*] Database 'neondb' already exists.
+
+[*] Connecting to database 'neondb'...
+[*] Creating table 'comparison_data'...
+[*] Creating table 'processed_files'...
+[*] Creating table 'raw_quotations'...
+[*] Creating table 'supplier_slots'...
+[*] Creating table 'supplier_items'...
+[*] Creating table 'supplier_terms'...
+
+[+] Verifying tables...
+  [OK] comparison_data (0 rows)
+  [OK] processed_files (0 rows)
+  [OK] raw_quotations (0 rows)
+  [OK] supplier_items (0 rows)
+  [OK] supplier_slots (3 rows)
+  [OK] supplier_terms (9 rows)
+
+[+] All tables created successfully. Database is ready.
+
+[+] STAGE COMPLETED: create_tables.py successfully.
+
+=======================================================
+[*] RUNNING STAGE: store_comparison_data.py 
+=======================================================
+[*] Connecting to database server ep-falling-smoke-ad984y5q.c-2.us-east-1.aws.neon.tech:5432 as user 'neondb_owner'...
+[*] Database 'neondb' already exists.
+[*] Found 1 Excel file(s) to import.
+[*] Connecting to database 'neondb'...
+[*] Checking table 'comparison_data'...
+[*] Clearing table 'comparison_data' for clean import...
+[*] Reading data from 'InputFile.xlsx'...
+[+] Successfully imported 13 rows from 'InputFile.xlsx'.
+[+] Import complete. Total rows inserted: 13
+
+--- Verification: Contents of table 'comparison_data' (13 records) ---
+ID: 636 | Item: 38mm Cable Gland Double Compressor Stainless Steel Make: HMI | UOM: Nos | Qty: 30
+ID: 637 | Item: 150 Sqmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 75
+ID: 638 | Item: 300 sqmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 150
+ID: 639 | Item: 63mm Cable Gland Double Compressor Stainless Steel Make: HMI | UOM: Nos | Qty: 50
+ID: 640 | Item: 120 SQmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 100
+ID: 641 | Item: 240 SQmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 100
+ID: 642 | Item: 35 SQmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 50
+ID: 643 | Item: 70 SQmm Copper Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 400
+ID: 644 | Item: 50 SQmm Aluminium Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 150
+ID: 645 | Item: 35mm Cable Gland Double Compressor Stainless Steel Make: HMI | UOM: Nos | Qty: 50
+ID: 646 | Item: 35 SQmm Aluminium Lug Flat Type - Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 80
+ID: 647 | Item: 25 SQmm Aluminium Heavy Duty Lug Flat Type, Make: Dowels | UOM: Nos | Qty: 75
+ID: 648 | Item: 70 SQmm Aluminium Lug Flat Type Make: Dowels | UOM: Nos | Qty: 200
+
+[+] STAGE COMPLETED: store_comparison_data.py successfully.
+
+=======================================================
+[*] RUNNING STAGE: extract_with_groq.py 
+=======================================================
+[*] Connecting to database...
+[*] Persisting existing data. Scanning for new files...
+[*] Found 3 file(s) in Download directory.
+[*] Processing new file: 26-271151 (1).pdf
+[PDF] Extracting text from: 26-271151 (1).pdf
+[*] Calling Groq LLM to parse text: 26-271151 (1).pdf...
+[*] Attempting parse with Groq model: llama-3.3-70b-versatile (Attempt 1/3)...
+[+] Groq parsed: 'Hari Hara Enterprises' with 13 items.
+[+] File '26-271151 (1).pdf' successfully imported to database in slot 1.
+[*] Processing new file: Re_  (1).eml
+[EML] Extracting text from: Re_  (1).eml
+[*] Calling Groq LLM to parse text: Re_  (1).eml...
+[*] Attempting parse with Groq model: llama-3.3-70b-versatile (Attempt 1/3)...
+[+] Groq parsed: 'cognitbotz' with 13 items.
+[+] File 'Re_  (1).eml' successfully imported to database in slot 2.
+[*] Processing new file: ffff.eml
+[EML] Extracting text from: ffff.eml
+[*] Calling Groq LLM to parse text: ffff.eml...
+[*] Attempting parse with Groq model: llama-3.3-70b-versatile (Attempt 1/3)...
+[+] Groq parsed: 'XYZ' with 13 items.
+[+] File 'ffff.eml' successfully imported to database in slot 3.
+[*] Import pass finished. 3 new file(s) imported.
+[*] Current unique suppliers in database: 3 (Hari Hara Enterprises, cognitbotz, XYZ)
+[*] Reached target: >= 3 companies in database. PDF compilation is deferred to the next stage (generate_pdf_from_db.py).
+
+[+] STAGE COMPLETED: extract_with_groq.py successfully.
+
+=======================================================
+[*] RUNNING STAGE: generate_pdf_from_db.py 
+=======================================================
+[*] Connecting to database...
+[*] Found 3 active supplier(s) in the database.
+[*] Fetching side-by-side data from database...
+[HTML] Generated comparison sheet: C:\UiPathProjects\BlankProcess\SE\Output\temp_compare.html
+[PDF] Compiling HTML into PDF report...
+[PDF] Generated PDF successfully: C:\UiPathProjects\BlankProcess\SE\Output\Output.pdf
+[HTML] Cleaned up temporary comparison file.
+[+] Synced copy of PDF report to: C:\Extraction Quotation\Output\Output.pdf
+
+[+] SUCCESS: Standalone comparison statement generated successfully from the database.
+[*] Clearing database data (transient tables and cache) and resetting slots/terms...
+[+] Database tables successfully cleared and reset.
+
+[+] STAGE COMPLETED: generate_pdf_from_db.py successfully.
+
+=======================================================
+[+] SUCCESS: Complete Comparison Pipeline executed successfully.
+=======================================================
+
+[*] Cleaning up any leftover Word background processes...
