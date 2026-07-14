@@ -12,32 +12,51 @@ PYTHON_EXE = os.path.join(PROJECT_DIR, ".venv313", "Scripts", "python.exe")
 
 def run_script(script_name, args=[]):
     script_path = os.path.join(PROJECT_DIR, script_name)
-    log_path = os.path.join(PROJECT_DIR, "pipeline.log")
     
-    # We append to the log file so the outputs of stages are preserved
-    with open(log_path, "a", encoding="utf-8") as log_file:
-        log_file.write(f"\n=======================================================\n")
-        log_file.write(f"[*] RUNNING STAGE: {script_name} {' '.join(args)}\n")
-        log_file.write(f"=======================================================\n")
-        log_file.flush()
-        
+    # Check if running in an interactive terminal
+    if sys.stdout.isatty():
+        print(f"\n=======================================================")
+        print(f"[*] RUNNING STAGE: {script_name} {' '.join(args)}")
+        print(f"=======================================================\n")
         try:
-            # Run using the venv Python with the project directory as cwd, redirecting output to the log file
+            # Run using the venv Python with the project directory as cwd, outputting to console
             subprocess.run(
                 [PYTHON_EXE, script_path] + args,
                 check=True,
-                cwd=PROJECT_DIR,
-                stdout=log_file,
-                stderr=log_file
+                cwd=PROJECT_DIR
             )
-            log_file.write(f"\n[+] STAGE COMPLETED: {script_name} successfully.\n")
+            print(f"\n[+] STAGE COMPLETED: {script_name} successfully.")
             return True
         except subprocess.CalledProcessError as e:
-            log_file.write(f"\n[-] STAGE FAILED: {script_name} failed with exit code {e.returncode}.\n")
+            print(f"\n[-] STAGE FAILED: {script_name} failed with exit code {e.returncode}.")
             return False
         except FileNotFoundError:
-            log_file.write(f"\n[-] STAGE FAILED: Python executable not found at {PYTHON_EXE}\n")
+            print(f"\n[-] STAGE FAILED: Python executable not found at {PYTHON_EXE}")
             return False
+    else:
+        # Running in a non-interactive environment (like UiPath) - redirect to log file to prevent hangs
+        log_path = os.path.join(PROJECT_DIR, "pipeline.log")
+        with open(log_path, "a", encoding="utf-8") as log_file:
+            log_file.write(f"\n=======================================================\n")
+            log_file.write(f"[*] RUNNING STAGE: {script_name} {' '.join(args)}\n")
+            log_file.write(f"=======================================================\n")
+            log_file.flush()
+            try:
+                subprocess.run(
+                    [PYTHON_EXE, script_path] + args,
+                    check=True,
+                    cwd=PROJECT_DIR,
+                    stdout=log_file,
+                    stderr=log_file
+                )
+                log_file.write(f"\n[+] STAGE COMPLETED: {script_name} successfully.\n")
+                return True
+            except subprocess.CalledProcessError as e:
+                log_file.write(f"\n[-] STAGE FAILED: {script_name} failed with exit code {e.returncode}.\n")
+                return False
+            except FileNotFoundError:
+                log_file.write(f"\n[-] STAGE FAILED: Python executable not found at {PYTHON_EXE}\n")
+                return False
 
 
 def clean_leftover_word_processes():
@@ -52,10 +71,12 @@ def main():
     # Pass any arguments (like --reset) to the sub-scripts
     extra_args = sys.argv[1:]
     
-    # Redirect run_pipeline.py's own stdout/stderr to pipeline.log to prevent UiPath/RPA host process hangs
-    log_path = os.path.join(PROJECT_DIR, "pipeline.log")
-    sys.stdout = open(log_path, "a", encoding="utf-8", buffering=1)
-    sys.stderr = sys.stdout
+    # Redirect run_pipeline.py's own stdout/stderr to pipeline.log only if running without a terminal (e.g. inside UiPath/RPA host)
+    if not sys.stdout.isatty():
+        log_path = os.path.join(PROJECT_DIR, "pipeline.log")
+        sys.stdout = open(log_path, "a", encoding="utf-8", buffering=1)
+        sys.stderr = sys.stdout
+
     
     try:
         # Clean up background processes first
